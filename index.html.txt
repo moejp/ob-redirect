@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Redirect</title>
+    <script>
+        function redirect() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const docID = urlParams.get('DocID');
+            if (docID) {
+                window.location.href = `onbase://document/view/?DocID=${docID}`;
+            } else {
+                document.body.innerHTML = 'DocID parameter is missing.';
+            }
+        }
+    </script>
+</head>
+<body onload="redirect()">
+</body>
+</html>
