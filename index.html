@@ -1,31 +1,42 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Redirect</title>
-<script>
+  <meta charset="utf-8">
+  <title>Redirect</title>
+  <script>
     function redirect() {
-        const urlParams = new URLSearchParams(window.location.search);
-        const docID = urlParams.get('DocID');
-        const classid = urlParams.get('classid');
-        const objectid = urlParams.get('objectid');
-        const lcid = urlParams.get('LCID');
-        const qid = urlParams.get('QID');
+      const p = new URLSearchParams(window.location.search);
 
-        if (docID) {
-            window.location.href = `onbase://document/view/?DocID=${docID}`;
-        } else if (classid && objectid) {
-            window.location.href = `onbase://wv/object/?classid=${classid}&objectid=${objectid}`;
-        } else if (lcid && qid) {
-            window.location.href = `onbase://wf/lc/?LifeCycleID=${lcid}&QueueID=${qid}`;
-        } else {
-            document.body.innerHTML = 'Required parameters are missing.';
-        }
+      const docID     = p.get('DocID');
+      const classid   = p.get('classid');
+      const objectid  = p.get('objectid');
+      const lifecycle = p.get('LifeCycleID');
+      const queue     = p.get('QueueID');
+
+      let target = null;
+
+      if (docID) {
+        target = `onbase://document/view/?DocID=${encodeURIComponent(docID)}`;
+      } else if (classid && objectid) {
+        target = `onbase://wv/object/?classid=${encodeURIComponent(classid)}&objectid=${encodeURIComponent(objectid)}`;
+      } else if (lifecycle && queue) {
+        target = `onbase://wf/lc/?LifeCycleID=${encodeURIComponent(lifecycle)}&QueueID=${encodeURIComponent(queue)}`;
+      }
+
+      if (target) {
+        // Auto-redirect
+        window.location.href = target;
+
+        // Fallback button in case browser blocks auto
+        document.body.innerHTML = `
+          <p>Redirecting to OnBase…</p>
+          <p><a href="${target}">Click here if it doesn’t open automatically.</a></p>
+        `;
+      } else {
+        document.body.textContent = 'Required parameters are missing.';
+      }
     }
-</script>
-
+  </script>
 </head>
-<body onload="redirect()">
-</body>
+<body onload="redirect()"></body>
 </html>
