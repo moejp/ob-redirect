@@ -4,22 +4,27 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Redirect</title>
-    <script>
-        function redirect() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const docID = urlParams.get('DocID');
-            const classid = urlParams.get('classid');
-            const objectid = urlParams.get('objectid');
+<script>
+    function redirect() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const docID = urlParams.get('DocID');
+        const classid = urlParams.get('classid');
+        const objectid = urlParams.get('objectid');
+        const lcid = urlParams.get('LCID');
+        const qid = urlParams.get('QID');
 
-            if (docID) {
-                window.location.href = `onbase://document/view/?DocID=${docID}`;
-            } else if (classid && objectid) {
-                window.location.href = `onbase://wv/object/?classid=${classid}&objectid=${objectid}`;
-            } else {
-                document.body.innerHTML = 'Required parameters are missing.';
-            }
+        if (docID) {
+            window.location.href = `onbase://document/view/?DocID=${docID}`;
+        } else if (classid && objectid) {
+            window.location.href = `onbase://wv/object/?classid=${classid}&objectid=${objectid}`;
+        } else if (lcid && qid) {
+            window.location.href = `onbase://wf/lc/?LifeCycleID=${lcid}&QueueID=${qid}`;
+        } else {
+            document.body.innerHTML = 'Required parameters are missing.';
         }
-    </script>
+    }
+</script>
+
 </head>
 <body onload="redirect()">
 </body>
