@@ -10,7 +10,7 @@
       const docID     = p.get('DocID');
       const classid   = p.get('classid');
       const objectid  = p.get('objectid');
-      const lifecycle = p.get('LifeCycleID');
+      const lifecycle = p.get('LifeCycleID') || '250';  // optional default
       const queue     = p.get('QueueID');
 
       let target = null;
@@ -19,18 +19,25 @@
         target = `onbase://document/view/?DocID=${encodeURIComponent(docID)}`;
       } else if (classid && objectid) {
         target = `onbase://wv/object/?classid=${encodeURIComponent(classid)}&objectid=${encodeURIComponent(objectid)}`;
-      } else if (lifecycle && queue) {
+      } else if (queue) {
         target = `onbase://wf/lc/?LifeCycleID=${encodeURIComponent(lifecycle)}&QueueID=${encodeURIComponent(queue)}`;
       }
 
       if (target) {
-        // Auto-redirect
+        // Try auto-redirect
         window.location.href = target;
 
-        // Fallback button in case browser blocks auto
+        // Try to close the tab after a short delay
+        setTimeout(() => {
+          window.open('', '_self');  // needed in some browsers
+          window.close();
+        }, 500);
+
+        // Fallback message
         document.body.innerHTML = `
           <p>Redirecting to OnBase…</p>
           <p><a href="${target}">Click here if it doesn’t open automatically.</a></p>
+          <p>If this tab doesn’t close automatically, you can close it manually.</p>
         `;
       } else {
         document.body.textContent = 'Required parameters are missing.';
