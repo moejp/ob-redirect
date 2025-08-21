@@ -1,17 +1,18 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <title>Redirect</title>
-  <script>
-    function redirect() {
-      const p = new URLSearchParams(window.location.search);
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Redirecting…</title>
+  <script defer>
+    (() => {
+      'use strict';
 
-      const docID     = p.get('DocID');
-      const classid   = p.get('classid');
-      const objectid  = p.get('objectid');
-      const lifecycle = p.get('LifeCycleID') || '250';  // optional default
-      const queue     = p.get('QueueID');
+      const params   = new URLSearchParams(location.search);
+      const docID    = params.get('DocID');
+      const classid  = params.get('classid');
+      const objectid = params.get('objectid');
+      const queue    = params.get('QueueID');
 
       let target = null;
 
@@ -20,30 +21,42 @@
       } else if (classid && objectid) {
         target = `onbase://wv/object/?classid=${encodeURIComponent(classid)}&objectid=${encodeURIComponent(objectid)}`;
       } else if (queue) {
+        const lifecycle = params.get('LifeCycleID') || '250';
         target = `onbase://wf/lc/?LifeCycleID=${encodeURIComponent(lifecycle)}&QueueID=${encodeURIComponent(queue)}`;
       }
 
-      if (target) {
-        // Try auto-redirect
-        window.location.href = target;
+      const container = document.getElementById('content');
 
-        // Try to close the tab after a short delay
-        setTimeout(() => {
-          window.open('', '_self');  // needed in some browsers
-          window.close();
-        }, 500);
-
-        // Fallback message
-        document.body.innerHTML = `
-          <p>Redirecting to OnBase…</p>
-          <p><a href="${target}">Click here if it doesn’t open automatically.</a></p>
-          <p>If this tab doesn’t close automatically, you can close it manually.</p>
-        `;
-      } else {
-        document.body.textContent = 'Required parameters are missing.';
+      if (!target) {
+        container.textContent = 'Required parameters are missing.';
+        return;
       }
-    }
+
+      try {
+        history.replaceState(null, '', location.origin + location.pathname);
+      } catch {}
+
+      const p1 = document.createElement('p');
+      p1.textContent = 'Redirecting to OnBase…';
+      const p2 = document.createElement('p');
+      const a  = document.createElement('a');
+      a.href = target;
+      a.textContent = 'Click here if it doesn’t open automatically.';
+      p2.appendChild(a);
+      const p3 = document.createElement('p');
+      p3.textContent = 'If this tab does not close automatically, you can close it manually.';
+      container.replaceChildren(p1, p2, p3);
+
+      try { location.replace(target); } catch {}
+
+      setTimeout(() => {
+        if (window.opener && !window.opener.closed) window.close();
+      }, 800);
+    })();
   </script>
 </head>
-<body onload="redirect()"></body>
+<body>
+  <noscript><p>JavaScript is required to open OnBase directly.</p></noscript>
+  <div id="content" role="status" aria-live="polite"></div>
+</body>
 </html>
