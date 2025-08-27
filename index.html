@@ -3,60 +3,77 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Redirecting…</title>
+  <title>Redirecting to OnBase…</title>
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; padding: 2rem; }
+    .card { max-width: 600px; margin: 0 auto; border: 1px solid #e5e7eb; border-radius: 12px; padding: 1.5rem; }
+    .btn { display: inline-block; padding: .75rem 1.25rem; border-radius: 8px;
+           border: 1px solid #1f2937; background: #f9fafb; font-weight: 600;
+           cursor: pointer; text-decoration: none; }
+    .btn:hover { background: #f3f4f6; }
+    .muted { color: #6b7280; margin-top: .75rem; }
+  </style>
   <script defer>
     (() => {
       'use strict';
 
-      const params   = new URLSearchParams(location.search);
-      const docID    = params.get('DocID');
-      const classid  = params.get('classid');
-      const objectid = params.get('objectid');
-      const queue    = params.get('QueueID');
+      function computeTarget() {
+        const params   = new URLSearchParams(location.search);
+        const docID    = params.get('DocID');
+        const classid  = params.get('classid');
+        const objectid = params.get('objectid');
+        const queue    = params.get('QueueID');
 
-      let target = null;
-
-      if (docID) {
-        target = `onbase://document/view/?DocID=${encodeURIComponent(docID)}`;
-      } else if (classid && objectid) {
-        target = `onbase://wv/object/?classid=${encodeURIComponent(classid)}&objectid=${encodeURIComponent(objectid)}`;
-      } else if (queue) {
-        const lifecycle = params.get('LifeCycleID') || '250';
-        target = `onbase://wf/lc/?LifeCycleID=${encodeURIComponent(lifecycle)}&QueueID=${encodeURIComponent(queue)}`;
+        if (docID) {
+          return `onbase://document/view/?DocID=${encodeURIComponent(docID)}`;
+        }
+        if (classid && objectid) {
+          return `onbase://wv/object/?classid=${encodeURIComponent(classid)}&objectid=${encodeURIComponent(objectid)}`;
+        }
+        if (queue) {
+          const lifecycle = params.get('LifeCycleID') || '250';
+          return `onbase://wf/lc/?LifeCycleID=${encodeURIComponent(lifecycle)}&QueueID=${encodeURIComponent(queue)}`;
+        }
+        return null;
       }
 
-      const container = document.getElementById('content');
+      window.addEventListener('DOMContentLoaded', () => {
+        const target = computeTarget();
+        const container = document.getElementById('content');
 
-      if (!target) {
-        container.textContent = 'Required parameters are missing.';
-        return;
-      }
+        if (!target) {
+          container.textContent = 'Required parameters are missing.';
+          return;
+        }
 
-      try {
-        history.replaceState(null, '', location.origin + location.pathname);
-      } catch {}
+        // Clean up the URL (remove query params from visible bar)
+        try { history.replaceState(null, '', location.origin + location.pathname); } catch {}
 
-      const p1 = document.createElement('p');
-      p1.textContent = 'Redirecting to OnBase…';
-      const p2 = document.createElement('p');
-      const a  = document.createElement('a');
-      a.href = target;
-      a.textContent = 'Click here if it doesn’t open automatically.';
-      p2.appendChild(a);
-      const p3 = document.createElement('p');
-      p3.textContent = 'If this tab does not close automatically, you can close it manually.';
-      container.replaceChildren(p1, p2, p3);
+        // Show UI
+        container.innerHTML = `
+          <h1>Redirecting to OnBase…</h1>
+          <p>If it doesn’t open automatically, click below:</p>
+          <p><a id="openBtn" class="btn" href="${target}">Open in OnBase</a></p>
+          <p class="muted">If OnBase has already opened, you can close this tab.</p>
+        `;
 
-      try { location.replace(target); } catch {}
+        // Attempt auto-open (will be blocked silently on newer browsers)
+        try { location.replace(target); } catch {}
 
-      setTimeout(() => {
-        if (window.opener && !window.opener.closed) window.close();
-      }, 800);
+        // Close the tab shortly after if possible (helps when auto-redirect worked)
+        setTimeout(() => {
+          try {
+            if (document.visibilityState === 'hidden') window.close();
+            if (window.opener && !window.opener.closed) window.close();
+          } catch {}
+        }, 800);
+      });
     })();
   </script>
 </head>
 <body>
-  <noscript><p>JavaScript is required to open OnBase directly.</p></noscript>
-  <div id="content" role="status" aria-live="polite"></div>
+  <div id="content" class="card" role="status" aria-live="polite">
+    <noscript><p>JavaScript is required to open OnBase directly.</p></noscript>
+  </div>
 </body>
 </html>
