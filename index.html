@@ -27,17 +27,10 @@
         // Try auto-redirect
         window.location.href = target;
 
-        // Try to close the tab after a short delay
-        setTimeout(() => {
-          window.open('', '_self');  // needed in some browsers
-          window.close();
-        }, 500);
-
         // Fallback message
         document.body.innerHTML = `
           <p>Redirecting to OnBase…</p>
           <p><a href="${target}">Click here if it doesn’t open automatically.</a></p>
-          <p>If this tab doesn’t close automatically, you can close it manually.</p>
         `;
       } else {
         document.body.textContent = 'Required parameters are missing.';
